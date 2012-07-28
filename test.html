@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>usage</title>
+<style>
+html , body {
+	margin: 0;
+	padding: 0;
+	background: #f7f7f7;
+	height: 100%;
+	font-size: 12px;
+}
+body {
+	display: -webkit-box;
+}
+#before , #after {
+	width: 0;
+	background: #fff;
+	-webkit-box-flex: 1;
+	margin: 5px;
+	display: block;
+	padding: 15px;
+	-webkit-box-sizing: border-box;
+}
+</style>
+</head>
+<body>
+
+<textarea id="before"></textarea>
+<textarea id="after"></textarea>
+
+<script type="text/x-template" id="tpl">
+variable hoge : {$hoge}
+variable piyo : {$piyo}
+variable piyo -- no escape : {$$piyo}
+
+----
+
+foreach :
+{@foreach $arr}
+	{$this}
+{/foreach}
+
+{@foreach $ireko.kodomo}
+	key : {$key}
+{/foreach}
+
+{@foreach [0,1,2,3,4,5,6] }
+	index : {$this}
+{/foreach}
+
+----
+
+if :
+{@if Math.PI > 3}
+	PI is larger than 3
+{@elseif $honto}
+	honto is true
+{@else}
+	PI is smaller than 3
+{/if}
+
+{@if $honto || $uso}
+	{@if $uso}
+		uso is true
+	{/if}
+	{@if $honto}
+		honto is true
+	{/if}
+{/if}
+
+{@if $honto && $uso}
+	$honto && $uso is true
+{/if}
+
+----
+
+plus :
+{$hoge + $piyo}
+
+----
+
+literal :
+{@literal}
+	{$hoge}
+	{$piyo}
+	{@foreach $arr}
+		key : {$$key}
+	{/foreach}
+{/literal}
+</script>
+
+<script src="process.js"></script>
+<script>
+var tpl = document.getElementById( 'tpl' ).innerHTML,
+	context = {
+				hoge : 'HOGE' ,
+				piyo : '<PIYO>&' ,
+				arr : [
+					'elm1',
+					'elm2'
+				],
+				"honto" : true ,
+				"uso" : false ,
+				ireko : {
+					kodomo : [
+						{ key : 'val1' },
+						{ key : 'val2' },
+						{ key : 'val3' },
+					]
+				}
+			};
+
+document.getElementById( 'before' ).value = '**** before ****\n\n' + tpl;
+document.getElementById( 'after' ).value = '**** after ( processed with context ) ****\n\n' + process( tpl , context );
+</script>
+</html>
