@@ -48,7 +48,7 @@ var process = (function(){
 			// foreach
 			else if ( type == 'foreach' ) {
 				t1 = '';
-				str.search( /{\s*@foreach\s+(.*?)\s*}/ );
+				/{\s*@foreach\s+(.*?)\s*}/.test( str );
 				t2 = get( RegExp.$1 , context ) || [];
 
 				for ( t3 = 0 ; t3 < t2.length ; t3++ ) {
@@ -59,43 +59,58 @@ var process = (function(){
 
 			// if
 			else if ( type == 'if' ) {
-				// detect any else
-				t1 = s2.search( /{\s*@if.*?}/ );
-				t2 = s2.search( /{\s*@else.*?}/ );
+				// find "else"
+				stack = 1;
+				t1 = 0;
+				start = /({\s*(@|\/)(if|else|elseif).*?})/;
 
-				// through
-				if ( t2 == -1 || ( t1 != -1 && t1 < t2) ) {
-					t2 = s2;
-					t3 = '';
+				while ( stack ) {
+					t3 = s2.substr( t1 + 1 );
+					t2 = t3.search( start );
+					
+					// error
+					if ( t2 == -1 ) {
+						t1 = s2.length - 1;
+						break;
+					}
+
+					// stack control
+					if ( RegExp.$3 == 'if' ) {
+						if ( RegExp.$2 == '/' ) {
+							stack--;
+						}
+						else {
+							stack++;
+						}
+					}
+
+					else if ( stack == 1 ) {
+						stack--;
+					}
+
+					t1 += t2 + 1;
 				}
 
+				// split
+				t2 = s2.substr( 0 , t1 );
+				t3 = s2.substr( t1 );
+
 				// interpret elseif
+				if ( RegExp.$3 == 'elseif' ) {
+					t3 = t3.replace(
+							/{\s*@elseif\s+(.*?)\s*}/ ,
+							function( a , m ){
+								return '{@if ' + m + '}';
+							} ) + '{/if}';
+				}
+
+				// offset
 				else {
-					t1 = s2.search( /{\s*@else\s*}/ );
-					t2 = s2.search( /{\s*@elseif\s+.*?\s*}/ );
-
-					if ( t2 != -1 && ( t1 == -1 || t2 < t1 ) ) {
-						s2 = s2.replace(
-								/{\s*@elseif\s+(.*?)\s*}/ ,
-								function( a , m ){
-									return '{@else}{@if ' + m + '}';
-								} ) + '{/if}';
-					}
-
-					// split pattern
-					t1 = s2.search( /({\s*@else\s*})/ );
-					if ( t1 != -1 ) {
-						t2 = s2.substr( 0 , t1 );
-						t3 = s2.substr( t1 + RegExp.$1.length );
-					}
-					else {
-						t2 = s2;
-						t3 = '';
-					}
+					t3 = t3.substr( RegExp.$1.length );
 				}
 
 				// cond
-				str.search( /{\s*@if\s+(.*?)\s*}/ );
+				/{\s*@if\s+(.*?)\s*}/.test( str );
 				if ( get( RegExp.$1 , context ) ) {
 					s2 = process( t2 , context );
 				}
