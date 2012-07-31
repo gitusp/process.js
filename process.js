@@ -59,27 +59,39 @@ var process = (function(){
 
 			// if
 			else if ( type == 'if' ) {
-				// interpret elseif
-				t1 = s2.search( /{\s*@else\s*}/ );
-				t2 = s2.search( /{\s*@elseif\s+.*?\s*}/ );
+				// detect any else
+				t1 = s2.search( /{\s*@if.*?}/ );
+				t2 = s2.search( /{\s*@else.*?}/ );
 
-				if ( t2 != -1 && ( t1 == -1 || t2 < t1 ) ) {
-					s2 = s2.replace(
-							/{\s*@elseif\s+(.*?)\s*}/ ,
-							function( a , m ){
-								return '{@else}{@if ' + m + '}';
-							} ) + '{/if}';
-				}
-
-				// split pattern
-				t1 = s2.search( /({\s*@else\s*})/ );
-				if ( t1 != -1 ) {
-					t2 = s2.substr( 0 , t1 );
-					t3 = s2.substr( t1 + RegExp.$1.length );
-				}
-				else {
+				// through
+				if ( t2 == -1 || ( t1 != -1 && t1 < t2) ) {
 					t2 = s2;
 					t3 = '';
+				}
+
+				// interpret elseif
+				else {
+					t1 = s2.search( /{\s*@else\s*}/ );
+					t2 = s2.search( /{\s*@elseif\s+.*?\s*}/ );
+
+					if ( t2 != -1 && ( t1 == -1 || t2 < t1 ) ) {
+						s2 = s2.replace(
+								/{\s*@elseif\s+(.*?)\s*}/ ,
+								function( a , m ){
+									return '{@else}{@if ' + m + '}';
+								} ) + '{/if}';
+					}
+
+					// split pattern
+					t1 = s2.search( /({\s*@else\s*})/ );
+					if ( t1 != -1 ) {
+						t2 = s2.substr( 0 , t1 );
+						t3 = s2.substr( t1 + RegExp.$1.length );
+					}
+					else {
+						t2 = s2;
+						t3 = '';
+					}
 				}
 
 				// cond
