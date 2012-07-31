@@ -62,15 +62,15 @@ var process = (function(){
 				// find "else"
 				stack = 1;
 				t1 = 0;
-				start = /({\s*(@|\/)(if|else|elseif).*?})/;
+				start = /({\s*(@|\/)(if|elseif|else).*?})/;
 
 				while ( stack ) {
 					t3 = s2.substr( t1 + 1 );
 					t2 = t3.search( start );
 					
-					// error
+					// no siblings
 					if ( t2 == -1 ) {
-						t1 = s2.length - 1;
+						t1 = s2.length;
 						break;
 					}
 
