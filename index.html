@@ -110,9 +110,12 @@ var tpl = document.getElementById( 'tpl' ).innerHTML,
 						{ key : 'val3' }
 					]
 				}
-			};
+			},
+	d1 = new Date,
+	result = process( tpl , context ),
+	d2 = new Date;
 
 document.getElementById( 'before' ).value = '**** before ****\n\n' + tpl;
-document.getElementById( 'after' ).value = '**** after ( processed with context ) ****\n\n' + process( tpl , context );
+document.getElementById( 'after' ).value = '**** after ( processed with context ' + ( d2 - d1 ) + 'msec ) ****\n\n' + result;
 </script>
 </html>

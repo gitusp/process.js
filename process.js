@@ -3,74 +3,83 @@ var process = (function(){
 	return process;
 
 	function process ( str , context ) {
-		var s1 , s2 , s3 , t1 , t2 , t3 , start , end , stack , type;
-		t1 = str.search( /{\s*@(literal|foreach|if).*?}/ );
+		var // strings
+			head , body , tail , strHeepA , strHeepB , type ,
+			// int
+			beginBlock , edge , intHeepA , intHeepB , stack ,
+			// array
+			arrayHeep ,
+			// regexp
+			start , end , wild;
+
+		beginBlock = str.search( /{\s*@(literal|foreach|if).*?}/ );
 
 		// any block
-		if ( t1 != -1 ) {
+		if ( beginBlock != -1 ) {
 			// set
-			s1 = str.substr( 0 , t1 );
+			head = str.substr( 0 , beginBlock );
 			type = RegExp.$1;
 
 			// lookup
 			stack = 1;
+			edge = beginBlock;
 			start = new RegExp( '({\\s*@' + type + '.*?})' );
 			end = new RegExp( '({\\s*/' + type + '\\s*})' );
 
 			while ( stack ) {
-				s2 = str.substr( t1 + 1 );
-				t2 = s2.search( start );
-				t3 = s2.search( end );
+				strHeepA = str.substr( edge + 1 );
+				intHeepA = strHeepA.search( start );
+				intHeepB = strHeepA.search( end );
 
-				if ( t3 == -1 ) {
+				if ( intHeepB == -1 ) {
 					throw 'compile error';
 				}
-				if ( t2 == -1 || t3 < t2 ) {
+				if ( intHeepA == -1 || intHeepB < intHeepA ) {
 					stack--;
-					t1 += t3 + 1;
+					edge += intHeepB + 1;
 				}
 				else {
 					stack++;
-					t1 += t2 + 1;
+					edge += intHeepA + 1;
 				}
 			}
 
 			// add close stat
-			s3 = str.substr( t1 + RegExp.$1.length );
+			tail = str.substr( edge + RegExp.$1.length );
 
 			// conditional block
-			t2 = str.search( start ) + RegExp.$1.length;
-			s2 = str.substr( t2 , t1 - t2 );
+			intHeepA = str.search( start ) + RegExp.$1.length;
+			body = str.substr( intHeepA , edge - intHeepA );
 
 			// bypass
 			if ( type == 'literal' ) {}
 
 			// foreach
 			else if ( type == 'foreach' ) {
-				t1 = '';
+				strHeepA = '';
 				/{\s*@foreach\s+(.*?)\s*}/.test( str );
-				t2 = get( RegExp.$1 , context ) || [];
+				arrayHeep = get( RegExp.$1 , context ) || [];
 
-				for ( t3 = 0 ; t3 < t2.length ; t3++ ) {
-					t1 += process( s2 , t2[ t3 ] );
+				for ( edge = 0 ; edge < arrayHeep.length ; edge++ ) {
+					strHeepA += process( body , arrayHeep[ edge ] );
 				}
-				s2 = t1;
+				body = strHeepA;
 			}
 
 			// if
 			else if ( type == 'if' ) {
 				// find "else"
 				stack = 1;
-				t1 = 0;
-				start = /({\s*(@|\/)(if|elseif|else).*?})/;
+				edge = 0;
+				wild = /({\s*(@|\/)(if|elseif|else).*?})/;
 
 				while ( stack ) {
-					t3 = s2.substr( t1 + 1 );
-					t2 = t3.search( start );
+					strHeepA = body.substr( edge + 1 );
+					intHeepA = strHeepA.search( wild );
 					
 					// no siblings
-					if ( t2 == -1 ) {
-						t1 = s2.length;
+					if ( intHeepA == -1 ) {
+						edge = body.length;
 						break;
 					}
 
@@ -84,20 +93,21 @@ var process = (function(){
 						}
 					}
 
+					// else or elseif
 					else if ( stack == 1 ) {
 						stack--;
 					}
 
-					t1 += t2 + 1;
+					edge += intHeepA + 1;
 				}
 
-				// split
-				t2 = s2.substr( 0 , t1 );
-				t3 = s2.substr( t1 );
+				// split : A -> true pattern , B -> false pattern
+				strHeepA = body.substr( 0 , edge );
+				strHeepB = body.substr( edge );
 
 				// interpret elseif
 				if ( RegExp.$3 == 'elseif' ) {
-					t3 = t3.replace(
+					strHeepB = strHeepB.replace(
 							/{\s*@elseif\s+(.*?)\s*}/ ,
 							function( a , m ){
 								return '{@if ' + m + '}';
@@ -106,21 +116,21 @@ var process = (function(){
 
 				// offset
 				else {
-					t3 = t3.substr( RegExp.$1.length );
+					strHeepB = strHeepB.substr( RegExp.$1.length );
 				}
 
 				// cond
 				/{\s*@if\s+(.*?)\s*}/.test( str );
 				if ( get( RegExp.$1 , context ) ) {
-					s2 = process( t2 , context );
+					body = process( strHeepA , context );
 				}
 				else {
-					s2 = process( t3 , context );
+					body = process( strHeepB , context );
 				}
 			}
 
 			// result
-			return extract( s1 , context ) + s2 + process( s3 , context );
+			return extract( head , context ) + body + process( tail , context );
 		}
 		else {
 			return extract( str , context );
