@@ -59,20 +59,19 @@ var process = (function(){
 
 			// if
 			else if ( type == 'if' ) {
-				t1 = 0;
-
 				// interpret elseif
-				s2 = s2.replace(
-						/{\s*@elseif\s+(.*?)\s*}/g ,
-						function( a , m ){
-							t1++;
-							return '{@else}{@if ' + m + '}';
-						} );
-				for ( t2 = 0 ; t2 < t1 ; t2++ ) {
-					s2 += '{/if}';
+				t1 = s2.search( /{\s*@else\s*}/ );
+				t2 = s2.search( /{\s*@elseif\s+.*?\s*}/ );
+
+				if ( t2 != -1 && ( t1 == -1 || t2 < t1 ) ) {
+					s2 = s2.replace(
+							/{\s*@elseif\s+(.*?)\s*}/ ,
+							function( a , m ){
+								return '{@else}{@if ' + m + '}';
+							} ) + '{/if}';
 				}
 
-				// search else
+				// split pattern
 				t1 = s2.search( /({\s*@else\s*})/ );
 				if ( t1 != -1 ) {
 					t2 = s2.substr( 0 , t1 );
