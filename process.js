@@ -1,3 +1,9 @@
+/*!
+ * process.js
+ *
+ * Copyright 2012, usp
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ */
 var process = (function(){
 
 	return process;
