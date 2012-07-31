@@ -1,5 +1,7 @@
 process.js
 ==================
+http://run.omoch.in/process.js/
+
 is lightweight template engine, like "Smarty".
 Look test.html to know how to use.
 
