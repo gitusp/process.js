@@ -5,6 +5,26 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 var process = (function(){
+	var // regexp
+		regBegin = /{\s*@(literal|foreach|if).*?}/,
+		regStartFromType = {
+			literal : /({\s*@literal.*?})/,
+			foreach : /({\s*@foreach.*?})/,
+			'if' : /({\s*@if.*?})/
+		},
+		regEndFromType = {
+			literal : /({\s*\/literal\s*})/,
+			foreach : /({\s*\/foreach\s*})/,
+			'if' : /({\s*\/if\s*})/
+		},
+		regForeachGet = /{\s*@foreach\s+(.*?)\s*}/,
+		regIfGet = /{\s*@if\s+(.*?)\s*}/,
+		regElseifGet = /{\s*@elseif\s+(.*?)\s*}/,
+		regValue = /{\s*(\$?)(\$.*?)\s*}/g,
+		regWild = /({\s*(@|\/)(if|elseif|else).*?})/,
+		regThis = /\$this/g,
+		regDec = /\$/g,
+		regSpecial = /<|>|&|'|"/g;
 
 	return process;
 
@@ -15,10 +35,11 @@ var process = (function(){
 			beginBlock , edge , intHeepA , intHeepB , stack ,
 			// array
 			arrayHeep ,
-			// regexp
-			start , end , wild;
+			// reg heep
+			start , end ;
 
-		beginBlock = str.search( /{\s*@(literal|foreach|if).*?}/ );
+
+		beginBlock = str.search( regBegin );
 
 		// any block
 		if ( beginBlock != -1 ) {
@@ -29,8 +50,8 @@ var process = (function(){
 			// lookup
 			stack = 1;
 			edge = beginBlock;
-			start = new RegExp( '({\\s*@' + type + '.*?})' );
-			end = new RegExp( '({\\s*/' + type + '\\s*})' );
+			start = regStartFromType[ type ];
+			end = regEndFromType[ type ];
 
 			while ( stack ) {
 				strHeepA = str.substr( edge + 1 );
@@ -63,7 +84,7 @@ var process = (function(){
 			// foreach
 			else if ( type == 'foreach' ) {
 				strHeepA = '';
-				/{\s*@foreach\s+(.*?)\s*}/.test( str );
+				regForeachGet.test( str );
 				arrayHeep = get( RegExp.$1 , context ) || [];
 
 				for ( edge = 0 ; edge < arrayHeep.length ; edge++ ) {
@@ -77,11 +98,10 @@ var process = (function(){
 				// find "else"
 				stack = 1;
 				edge = 0;
-				wild = /({\s*(@|\/)(if|elseif|else).*?})/;
 
 				while ( stack ) {
 					strHeepA = body.substr( edge + 1 );
-					intHeepA = strHeepA.search( wild );
+					intHeepA = strHeepA.search( regWild );
 					
 					// no siblings
 					if ( intHeepA == -1 ) {
@@ -114,7 +134,7 @@ var process = (function(){
 				// interpret elseif
 				if ( RegExp.$3 == 'elseif' ) {
 					strHeepB = strHeepB.replace(
-							/{\s*@elseif\s+(.*?)\s*}/ ,
+							regElseifGet ,
 							function( a , m ){
 								return '{@if ' + m + '}';
 							} ) + '{/if}';
@@ -126,7 +146,7 @@ var process = (function(){
 				}
 
 				// cond
-				/{\s*@if\s+(.*?)\s*}/.test( str );
+				regIfGet.test( str );
 				if ( get( RegExp.$1 , context ) ) {
 					body = process( strHeepA , context );
 				}
@@ -143,7 +163,7 @@ var process = (function(){
 		}
 	}
 	function extract ( str , context ) {
-		return str.replace( /{\s*(\$?)(\$.*?)\s*}/g , function( a , n , m ){
+		return str.replace( regValue , function( a , n , m ){
 			var r = get( m , context );
 			r = r === undefined ? '' : r;
 			if ( !n ) {
@@ -153,13 +173,13 @@ var process = (function(){
 		} );
 	}
 	function get ( cond , context ) {
-		cond = cond.replace( /\$this/g , 'context' );
-		cond = cond.replace( /\$/g , 'context.' );
+		cond = cond.replace( regThis , 'context' );
+		cond = cond.replace( regDec , 'context.' );
 		return eval( cond );
 	}
 	function escapeHtml ( str ) {
 		str += "";
-		return str.replace( /<|>|&|'|"/g , function( a ){
+		return str.replace( regSpecial , function( a ){
 			switch ( a ) {
 				case '<' : return '&lt;';
 				case '>' : return '&gt;';
