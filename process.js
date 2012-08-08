@@ -20,15 +20,16 @@ var process = (function(){
 		regForeachGet = /{\s*@foreach\s+(?:(-l)\s+)?(.*?)\s*}/,
 		regIfGet = /{\s*@if\s+(.*?)\s*}/,
 		regElseifGet = /{\s*@elseif\s+(.*?)\s*}/,
-		regValue = /{\s*(\$?)(\$.*?)\s*}/g,
+		regValue = /{\s*(\~?)([\$\^].*?)\s*}/g,
 		regWild = /({\s*(@|\/)(if|elseif|else).*?})/,
 		regThis = /\$this/g,
 		regDec = /\$/g,
+		regDecSub = /\^/g,
 		regSpecial = /<|>|&|'|"/g;
 
 	return process;
 
-	function process ( str , context ) {
+	function process ( str , context , subContext ) {
 		var // strings
 			head , body , tail , strHeepA , strHeepB , type , isList ,
 			// int
@@ -86,20 +87,26 @@ var process = (function(){
 				strHeepA = '';
 				regForeachGet.test( str );
 				isList = RegExp.$1;
-				objHeep = get( RegExp.$2 , context ) || [];
+				objHeep = get( RegExp.$2 , context , subContext ) || [];
 
 				// Array
 				if ( objHeep instanceof Array ) {
 					for ( edge = 0; edge < objHeep.length; edge++ ) {
-						strHeepA += process( body ,
-							isList ? { key : edge , val : objHeep[ edge ] , '^' : context } : objHeep[ edge ] );
+						strHeepA += process(
+							body ,
+							isList ? { key : edge , val : objHeep[ edge ] } : objHeep[ edge ] ,
+							context
+						);
 					}
 				}
 				// may be Object
 				else {
 					for ( strHeepB in objHeep ) {
-						strHeepA += process( body ,
-							isList ? { key : strHeepB , val : objHeep[ strHeepB ] , '^' : context } : objHeep[ strHeepB ] );
+						strHeepA += process(
+							body ,
+							isList ? { key : strHeepB , val : objHeep[ strHeepB ] } : objHeep[ strHeepB ] ,
+							context
+						);
 					}
 				}
 
@@ -160,24 +167,24 @@ var process = (function(){
 
 				// cond
 				regIfGet.test( str );
-				if ( get( RegExp.$1 , context ) ) {
-					body = process( strHeepA , context );
+				if ( get( RegExp.$1 , context , subContext ) ) {
+					body = process( strHeepA , context , subContext );
 				}
 				else {
-					body = process( strHeepB , context );
+					body = process( strHeepB , context , subContext );
 				}
 			}
 
 			// result
-			return extract( head , context ) + body + process( tail , context );
+			return extract( head , context , subContext ) + body + process( tail , context , subContext );
 		}
 		else {
-			return extract( str , context );
+			return extract( str , context , subContext );
 		}
 	}
-	function extract ( str , context ) {
+	function extract ( str , context , subContext ) {
 		return str.replace( regValue , function( a , n , m ){
-			var r = get( m , context );
+			var r = get( m , context , subContext );
 			r = r === undefined ? '' : r;
 			if ( !n ) {
 				r = escapeHtml( r );
@@ -185,9 +192,10 @@ var process = (function(){
 			return r;
 		} );
 	}
-	function get ( cond , context ) {
+	function get ( cond , context , subContext ) {
 		cond = cond.replace( regThis , 'context' );
 		cond = cond.replace( regDec , 'context.' );
+		cond = cond.replace( regDecSub , 'subContext.' );
 		return eval( cond );
 	}
 	function escapeHtml ( str ) {
