@@ -92,14 +92,14 @@ var process = (function(){
 				if ( objHeep instanceof Array ) {
 					for ( edge = 0; edge < objHeep.length; edge++ ) {
 						strHeepA += process( body ,
-							isList ? { key : edge , val : objHeep[ edge ] } : objHeep[ edge ] );
+							isList ? { key : edge , val : objHeep[ edge ] , '^' : context } : objHeep[ edge ] );
 					}
 				}
 				// may be Object
 				else {
 					for ( strHeepB in objHeep ) {
 						strHeepA += process( body ,
-							isList ? { key : strHeepB , val : objHeep[ strHeepB ] } : objHeep[ strHeepB ] );
+							isList ? { key : strHeepB , val : objHeep[ strHeepB ] , '^' : context } : objHeep[ strHeepB ] );
 					}
 				}
 
