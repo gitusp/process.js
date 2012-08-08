@@ -17,7 +17,7 @@ var process = (function(){
 			foreach : /({\s*\/foreach\s*})/,
 			'if' : /({\s*\/if\s*})/
 		},
-		regForeachGet = /{\s*@foreach\s+(.*?)\s*}/,
+		regForeachGet = /{\s*@foreach\s+(?:(-l)\s+)?(.*?)\s*}/,
 		regIfGet = /{\s*@if\s+(.*?)\s*}/,
 		regElseifGet = /{\s*@elseif\s+(.*?)\s*}/,
 		regValue = /{\s*(\$?)(\$.*?)\s*}/g,
@@ -30,7 +30,7 @@ var process = (function(){
 
 	function process ( str , context ) {
 		var // strings
-			head , body , tail , strHeepA , strHeepB , type ,
+			head , body , tail , strHeepA , strHeepB , type , isList ,
 			// int
 			beginBlock , edge , intHeepA , intHeepB , stack ,
 			// array or object
@@ -85,18 +85,21 @@ var process = (function(){
 			else if ( type == 'foreach' ) {
 				strHeepA = '';
 				regForeachGet.test( str );
-				objHeep = get( RegExp.$1 , context ) || [];
+				isList = RegExp.$1;
+				objHeep = get( RegExp.$2 , context ) || [];
 
 				// Array
 				if ( objHeep instanceof Array ) {
 					for ( edge = 0; edge < objHeep.length; edge++ ) {
-						strHeepA += process( body , { key : edge , val : objHeep[ edge ] } );
+						strHeepA += process( body ,
+							isList ? { key : edge , val : objHeep[ edge ] } : objHeep[ edge ] );
 					}
 				}
 				// may be Object
 				else {
 					for ( strHeepB in objHeep ) {
-						strHeepA += process( body , { key : strHeepB , val : objHeep[ strHeepB ] } );
+						strHeepA += process( body ,
+							isList ? { key : strHeepB , val : objHeep[ strHeepB ] } : objHeep[ strHeepB ] );
 					}
 				}
 

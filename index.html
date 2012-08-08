@@ -39,16 +39,17 @@ variable piyo -- no escape : {$$piyo}
 
 foreach :
 {@foreach $arr}
-	{$val}
+	{$this}
 {/foreach}
 
-{@foreach $ireko.kodomo}
+{@foreach -l $ireko.kodomo}
 	key : {$key}
 	val : {$val}
 {/foreach}
 
-{@foreach [0,1,2,3,4,5,6] }
-	index : {$key}
+{@foreach -l [ 6 , 5 , 4 , 3 , 2 , 1 , 0 ] }
+	key : {$key}
+	val : {$val}
 {/foreach}
 
 ----
@@ -86,8 +87,8 @@ literal :
 {@literal}
 	{$hoge}
 	{$piyo}
-	{@foreach [0,1,2,3,4,5,6] }
-		index : {$key}
+	{@foreach [ 6 , 5 , 4 , 3 , 2 , 1 , 0 ] }
+		val : {$this}
 	{/foreach}
 {/literal}
 </script>
