@@ -39,15 +39,16 @@ variable piyo -- no escape : {$$piyo}
 
 foreach :
 {@foreach $arr}
-	{$this}
+	{$val}
 {/foreach}
 
 {@foreach $ireko.kodomo}
 	key : {$key}
+	val : {$val}
 {/foreach}
 
 {@foreach [0,1,2,3,4,5,6] }
-	index : {$this}
+	index : {$key}
 {/foreach}
 
 ----
@@ -85,8 +86,8 @@ literal :
 {@literal}
 	{$hoge}
 	{$piyo}
-	{@foreach $arr}
-		key : {$$key}
+	{@foreach [0,1,2,3,4,5,6] }
+		index : {$key}
 	{/foreach}
 {/literal}
 </script>
@@ -104,11 +105,11 @@ var tpl = document.getElementById( 'tpl' ).innerHTML,
 				"honto" : true ,
 				"uso" : false ,
 				ireko : {
-					kodomo : [
-						{ key : 'val1' },
-						{ key : 'val2' },
-						{ key : 'val3' }
-					]
+					kodomo : {
+						tarako : 'val1',
+						mago : 'val2',
+						honnne : 'val3'
+					}
 				}
 			},
 	d1 = new Date,

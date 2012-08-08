@@ -33,8 +33,8 @@ var process = (function(){
 			head , body , tail , strHeepA , strHeepB , type ,
 			// int
 			beginBlock , edge , intHeepA , intHeepB , stack ,
-			// array
-			arrayHeep ,
+			// array or object
+			objHeep ,
 			// reg heep
 			start , end ;
 
@@ -85,11 +85,21 @@ var process = (function(){
 			else if ( type == 'foreach' ) {
 				strHeepA = '';
 				regForeachGet.test( str );
-				arrayHeep = get( RegExp.$1 , context ) || [];
+				objHeep = get( RegExp.$1 , context ) || [];
 
-				for ( edge = 0 ; edge < arrayHeep.length ; edge++ ) {
-					strHeepA += process( body , arrayHeep[ edge ] );
+				// Array
+				if ( objHeep instanceof Array ) {
+					for ( edge = 0; edge < objHeep.length; edge++ ) {
+						strHeepA += process( body , { key : edge , val : objHeep[ edge ] } );
+					}
 				}
+				// may be Object
+				else {
+					for ( strHeepB in objHeep ) {
+						strHeepA += process( body , { key : strHeepB , val : objHeep[ strHeepB ] } );
+					}
+				}
+
 				body = strHeepA;
 			}
 
