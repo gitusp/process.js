@@ -206,10 +206,11 @@ var process = (function(){
 	function expr ( cond , context , fn , scope ) {
 		regExpr.test( cond );
 		var withFn = RegExp.$1 && RegExp.$3,
+			fnName = RegExp.$1,
 			trimmedKey = RegExp.$2.replace( regAllWhite , '' );
 
 		if ( withFn ) {
-			var theFn = fn[ RegExp.$1 ],
+			var theFn = fn[ fnName ],
 				keys = trimmedKey.split( ',' ),
 				i = 0,
 				args = [];

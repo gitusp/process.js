@@ -35,10 +35,18 @@ if :
 {@if $uso}
 	uso is true
 {/if}
-
 {@if $honto}
 	honto is true
 {/if}
+
+{@if $uso}
+	uso is true
+{@elseif gt( $num1 , $num2 ) }
+	num1 is greater than num2
+{@else}
+	num1 is less than num2
+{/if}
+
 
 ----
 
@@ -50,7 +58,18 @@ variable piyo -- no escape : {~$piyo}
 
 foreach :
 {@foreach $arr}
-	{$this}
+	{ @if isArray( $this ) }
+		{@foreach $this }
+			i am {$this}
+			ancestor piyo is {^^piyo}
+			ancestor piyo is {~^^piyo} -- no escape
+		{/foreach}
+	{ @else }
+		{$this}
+		{@if gt( $this , ^num1 )}
+		{$this} is greater than {^num1}
+		{/if}
+	{ /if }
 {/foreach}
 
 {@foreach -l $ireko.kodomo}
@@ -64,9 +83,6 @@ literal :
 {@literal}
 	{$hoge}
 	{$piyo}
-	{@foreach [ 6 , 5 , 4 , 3 , 2 , 1 , 0 ] }
-		val : {$this}
-	{/foreach}
 {/literal}
 </script>
 
@@ -76,9 +92,13 @@ var tpl = document.getElementById( 'tpl' ).innerHTML,
 	context = {
 				hoge : 'HOGE' ,
 				piyo : '<PIYO>&' ,
+				num1 : 10 ,
+				num2 : 20 ,
 				arr : [
-					'elm1',
-					'elm2'
+					0,
+					10,
+					20,
+					[ 'hoge' ]
 				],
 				"honto" : true ,
 				"uso" : false ,
@@ -90,8 +110,19 @@ var tpl = document.getElementById( 'tpl' ).innerHTML,
 					}
 				}
 			},
+	fn = {
+			gt : function ( a , b ) {
+				if ( a > b ) {
+					return true;
+				}
+				return false;
+			},
+			isArray : function( obj ) {
+				return obj instanceof Array;
+			}
+	},
 	d1 = new Date,
-	result = process( tpl , context ),
+	result = process( tpl , context , fn ),
 	d2 = new Date;
 
 document.getElementById( 'before' ).value = '**** before ****\n\n' + tpl;
