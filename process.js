@@ -25,10 +25,48 @@ var process = (function(){
 		regVar = /^(\$|\^+)(\S+)$/,
 		regExpr = /^(?:(\S+)\s*\()?(.*?)(\))?$/,
 		regAllWhite = /\s/g,
-		regSpecial = /<|>|&|'|"/g;
+		regSpecial = /<|>|&|'|"/g,
+		
+		// expr set
+		exprSet = {
+			not :	function ( a ) { return !a; },
 
-	return process;
+			eq :	function ( a , b ) { return a == b; },
+			seq :	function ( a , b ) { return a === b; },
 
+			ne :	function ( a , b ) { return a != b; },
+			sne :	function ( a , b ) { return a !== b; },
+
+			lt :	function ( a , b ) { return a < b; },
+			elt :	function ( a , b ) { return a <= b; },
+
+			gt :	function ( a , b ) { return a > b; },
+			egt :	function ( a , b ) { return a >= b; }
+		};
+
+	// entry point
+	return function ( str , context , fn , scope ) {
+		var kit;
+
+		if ( fn ) {
+			var key;
+			kit = {};
+
+			for ( key in exprSet ) {
+				kit[ key ] = exprSet[ key ];
+			}
+			for ( key in fn ) {
+				kit[ key ] = fn[ key ];
+			}
+		}
+		else {
+			kit = exprSet;
+		}
+
+		return process( str , context , kit , scope );
+	};
+
+	// main processor
 	function process ( str , context , fn , scope ) {
 		// init scope
 		if ( !scope ) {

@@ -47,6 +47,9 @@ if :
 	{/if}
 {/if}
 
+{@if not( $uso )}
+	uso is not true
+{/if}
 
 ----
 
@@ -111,12 +114,6 @@ var tpl = document.getElementById( 'tpl' ).innerHTML,
 				}
 			},
 	fn = {
-			gt : function ( a , b ) {
-				if ( a > b ) {
-					return true;
-				}
-				return false;
-			},
 			isArray : function( obj ) {
 				return obj instanceof Array;
 			}
