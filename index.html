@@ -31,6 +31,17 @@ body {
 <textarea id="after"></textarea>
 
 <script type="text/x-template" id="tpl">
+if :
+{@if $uso}
+	uso is true
+{/if}
+
+{@if $honto}
+	honto is true
+{/if}
+
+----
+
 variable hoge : {$hoge}
 variable piyo : {$piyo}
 variable piyo -- no escape : {~$piyo}
@@ -46,40 +57,6 @@ foreach :
 	key : {$key}
 	val : {$val}
 {/foreach}
-
-{@foreach -l [ 6 , 5 , 4 , 3 , 2 , 1 , 0 ] }
-	key : {$key}
-	val : {$val}
-{/foreach}
-
-----
-
-if :
-{@if Math.PI > 3}
-	PI is larger than 3
-{@elseif $honto}
-	honto is true
-{@else}
-	PI is smaller than 3
-{/if}
-
-{@if $honto || $uso}
-	{@if $uso}
-		uso is true
-	{/if}
-	{@if $honto}
-		honto is true
-	{/if}
-{/if}
-
-{@if $honto && $uso}
-	$honto && $uso is true
-{/if}
-
-----
-
-plus :
-{$hoge + $piyo}
 
 ----
 

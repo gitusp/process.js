@@ -8,7 +8,7 @@ var process = (function(){
 	var // regexp
 		regBegin = /{\s*@(literal|foreach|if).*?}/,
 		regStartFromType = {
-			literal : /({\s*@literal.*?})/,
+			literal : /({\s*@literal\s*})/,
 			foreach : /({\s*@foreach.*?})/,
 			'if' : /({\s*@if.*?})/
 		},
@@ -20,16 +20,21 @@ var process = (function(){
 		regForeachGet = /{\s*@foreach\s+(?:(-l)\s+)?(.*?)\s*}/,
 		regIfGet = /{\s*@if\s+(.*?)\s*}/,
 		regElseifGet = /{\s*@elseif\s+(.*?)\s*}/,
-		regValue = /{\s*(\~?)([\$\^].*?)\s*}/g,
+		regValue = /{\s*(~?)([\$\^]\S+)\s*}/g,
 		regWild = /({\s*(@|\/)(if|elseif|else).*?})/,
-		regThis = /\$this/g,
-		regDec = /\$/g,
-		regDecSub = /\^/g,
+		regVar = /^(\$|\^+)(\S+)$/,
+		regExpr = /^(?:(\S+)\s*\()?(.*?)(\))?$/,
+		regAllWhite = /\s/g,
 		regSpecial = /<|>|&|'|"/g;
 
 	return process;
 
-	function process ( str , context , subContext ) {
+	function process ( str , context , fn , scope ) {
+		// init scope
+		if ( !scope ) {
+			scope = [];
+		}
+
 		var // strings
 			head , body , tail , strHeepA , strHeepB , type , isList ,
 			// int
@@ -87,7 +92,7 @@ var process = (function(){
 				strHeepA = '';
 				regForeachGet.test( str );
 				isList = RegExp.$1;
-				objHeep = get( RegExp.$2 , context , subContext ) || [];
+				objHeep = get( RegExp.$2 , context , scope ) || [];
 
 				// Array
 				if ( objHeep instanceof Array ) {
@@ -95,7 +100,8 @@ var process = (function(){
 						strHeepA += process(
 							body ,
 							isList ? { key : edge , val : objHeep[ edge ] } : objHeep[ edge ] ,
-							context
+							fn ,
+							scope.concat( [ context ] )
 						);
 					}
 				}
@@ -105,7 +111,8 @@ var process = (function(){
 						strHeepA += process(
 							body ,
 							isList ? { key : strHeepB , val : objHeep[ strHeepB ] } : objHeep[ strHeepB ] ,
-							context
+							fn ,
+							scope.concat( [ context ] )
 						);
 					}
 				}
@@ -167,24 +174,26 @@ var process = (function(){
 
 				// cond
 				regIfGet.test( str );
-				if ( get( RegExp.$1 , context , subContext ) ) {
-					body = process( strHeepA , context , subContext );
+				if ( expr( RegExp.$1 , context , fn , scope ) ) {
+					body = process( strHeepA , context , fn , scope );
 				}
 				else {
-					body = process( strHeepB , context , subContext );
+					body = process( strHeepB , context , fn , scope );
 				}
 			}
 
 			// result
-			return extract( head , context , subContext ) + body + process( tail , context , subContext );
+			return extract( head , context , scope ) + body + process( tail , context , fn , scope );
 		}
 		else {
-			return extract( str , context , subContext );
+			return extract( str , context , scope );
 		}
 	}
-	function extract ( str , context , subContext ) {
+
+	// simple extracter of vars
+	function extract ( str , context , scope ) {
 		return str.replace( regValue , function( a , n , m ){
-			var r = get( m , context , subContext );
+			var r = get( m , context , scope );
 			r = r === undefined ? '' : r;
 			if ( !n ) {
 				r = escapeHtml( r );
@@ -192,11 +201,43 @@ var process = (function(){
 			return r;
 		} );
 	}
-	function get ( cond , context , subContext ) {
-		cond = cond.replace( regThis , 'context' );
-		cond = cond.replace( regDec , 'context.' );
-		cond = cond.replace( regDecSub , 'subContext.' );
-		return eval( cond );
+
+	// expr true or false
+	function expr ( cond , context , fn , scope ) {
+		regExpr.test( cond );
+		var withFn = RegExp.$1 && RegExp.$3,
+			trimmedKey = RegExp.$2.replace( regAllWhite , '' );
+
+		if ( withFn ) {
+			var theFn = fn[ RegExp.$1 ],
+				keys = trimmedKey.split( ',' ),
+				i = 0,
+				args = [];
+
+			for ( ; i < keys.length; i++ ) {
+				args.push( get( keys[ i ] , context , scope ) );
+			}
+			return theFn.apply( this , args );
+		}
+		return get( trimmedKey , context , scope );
+	}
+
+	// get real value from ~$^key.key
+	function get ( cond , context , scope ) {
+		if ( cond == '$this' ) {
+			return context;
+		}
+
+		regVar.test( cond );
+		var type = RegExp.$1,
+			keys = RegExp.$2.split( '.' ),
+			base = type == '$' ? context : scope[ scope.length - type.length ],
+			i = 0;
+
+		for ( ; i < keys.length; i++ ) {
+			base = base[ keys[ i ] ];
+		}
+		return base;
 	}
 	function escapeHtml ( str ) {
 		str += "";
