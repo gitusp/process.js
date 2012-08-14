@@ -3,6 +3,8 @@
  *
  * Copyright 2012, usp
  * Dual licensed under the MIT or GPL Version 2 licenses.
+ *
+ * requires filter.js
  */
 var process = (function(){
 	var // regexp
@@ -233,8 +235,9 @@ var process = (function(){
 		return str.replace( regValue , function( a , n , m ){
 			var r = get( m , context , scope );
 			r = r === undefined ? '' : r;
+			r = r + '';
 			if ( !n ) {
-				r = escapeHtml( r );
+				r = filter.cooked( r );
 			}
 			return r;
 		} );
@@ -277,17 +280,5 @@ var process = (function(){
 			base = base[ keys[ i ] ];
 		}
 		return base;
-	}
-	function escapeHtml ( str ) {
-		str += "";
-		return str.replace( regSpecial , function( a ){
-			switch ( a ) {
-				case '<' : return '&lt;';
-				case '>' : return '&gt;';
-				case '&' : return '&amp;';
-				case "'" : return '&#039;';
-				case '"' : return '&quot;';
-			}
-		} );
 	}
 })();
