@@ -34,7 +34,7 @@ body {
 if :
 {@if $uso}
 	uso is true
-{@elseif gt( $num1 , $num2 ) }
+{@elseif -gt $num1 $num2 }
 	num1 is greater than num2
 {@else}
 	num1 is less than num2
@@ -47,8 +47,15 @@ if :
 	{/if}
 {/if}
 
-{@if not( $uso )}
+{@if -not $uso}
 	uso is not true
+{/if}
+
+{@if -and $honto $uso}
+	honto and uso is true
+{/if}
+{@if -or $honto $uso}
+	honto or uso is true
 {/if}
 
 ----
@@ -61,7 +68,7 @@ variable piyo -- no escape : {~$piyo}
 
 foreach :
 {@foreach $arr}
-	{ @if isArray( $this ) }
+	{ @if -isArray $this }
 		{@foreach $this }
 			i am {$this}
 			ancestor piyo is {^^piyo}
@@ -69,7 +76,7 @@ foreach :
 		{/foreach}
 	{ @else }
 		{$this}
-		{@if gt( $this , ^num1 )}
+		{@if -gt $this ^num1}
 		{$this} is greater than {^num1}
 		{/if}
 	{ /if }

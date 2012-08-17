@@ -25,14 +25,13 @@ var process = (function(){
 		regValue = /{\s*(~?)([\$\^].*?)\s*}/g,
 		regWild = /({\s*(@|\/)(if|elseif|else).*?})/,
 		regVar = /^(\$|\^+)(\S+)$/,
-		regExpr = /^(?:(\S+)\s*\()?(.*?)(\))?$/,
+		regExpr = /^(?:-(\S+)\s+)?(.*?)$/,
 		regAllWhite = /\s/g,
 		regSpecial = /<|>|&|'|"/g,
 		
 		// expr set
 		exprSet = {
-			not :	function ( a ) { return !a; },
-
+			// ** than
 			eq :	function ( a , b ) { return a == b; },
 			seq :	function ( a , b ) { return a === b; },
 
@@ -43,7 +42,28 @@ var process = (function(){
 			elt :	function ( a , b ) { return a <= b; },
 
 			gt :	function ( a , b ) { return a > b; },
-			egt :	function ( a , b ) { return a >= b; }
+			egt :	function ( a , b ) { return a >= b; },
+
+			// logical
+			not :	function ( a ) { return !a; },
+			or :	function () {
+				var i = 0;
+				for ( ; i < arguments.length; i++ ) {
+					if ( arguments[ i ] ) {
+						return true;
+					}
+				}
+				return false;
+			},
+			and :	function () {
+				var i = 0;
+				for ( ; i < arguments.length; i++ ) {
+					if ( !arguments[ i ] ) {
+						return false;
+					}
+				}
+				return true;
+			}
 		};
 
 	// entry point
@@ -246,13 +266,12 @@ var process = (function(){
 	// expr true or false
 	function expr ( cond , context , fn , scope ) {
 		regExpr.test( cond );
-		var withFn = RegExp.$1 && RegExp.$3,
-			fnName = RegExp.$1,
-			trimmedKey = RegExp.$2.replace( regAllWhite , '' );
+		var fnName = RegExp.$1,
+			key = RegExp.$2;
 
-		if ( withFn ) {
+		if ( fnName ) {
 			var theFn = fn[ fnName ],
-				keys = trimmedKey.split( ',' ),
+				keys = key.split( /\s+/ ),
 				i = 0,
 				args = [];
 
@@ -261,7 +280,7 @@ var process = (function(){
 			}
 			return theFn.apply( this , args );
 		}
-		return get( trimmedKey , context , scope );
+		return get( key , context , scope );
 	}
 
 	// get real value from ~$^key.key
