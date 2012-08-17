@@ -19,15 +19,13 @@ var process = (function(){
 			foreach : /({\s*\/foreach\s*})/,
 			'if' : /({\s*\/if\s*})/
 		},
-		regForeachGet = /{\s*@foreach\s+(?:(-l)\s+)?(.*?)\s*}/,
+		regForeachGet = /{\s*@foreach\s+(?:(-l)\s+)?(\S+)\s*}/,
 		regIfGet = /{\s*@if\s+(.*?)\s*}/,
 		regElseifGet = /{\s*@elseif\s+(.*?)\s*}/,
-		regValue = /{\s*(~?)([\$\^].*?)\s*}/g,
+		regValue = /{\s*(~?)([\$\^]\S+)\s*}/g,
 		regWild = /({\s*(@|\/)(if|elseif|else).*?})/,
 		regVar = /^(\$|\^+)(\S+)$/,
 		regExpr = /^(?:-(\S+)\s+)?(.*?)$/,
-		regAllWhite = /\s/g,
-		regSpecial = /<|>|&|'|"/g,
 		
 		// expr set
 		exprSet = {
